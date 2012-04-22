@@ -75,7 +75,21 @@ class NaiveBayes {
     )
   }
 
-  // model
+  /**
+  * Computes the probability that a given message 
+  */
+  def predict(testSetPath: String, p_word_spam: Map[String, Double], p_word_notSpam: Map[String, Double]) = {
+    var p_spam: Double = 0
+    var p_notSpam: Double = 0
+    val testWords = buildDictionary(testSetPath)
 
-  // predict
+    testWords.map(w => w._2)
+    .toSeq.foreach(w => {
+      p_spam += p_word_spam.getOrElse(w, 0.0)
+      p_notSpam += p_word_notSpam.getOrElse(w, 0.0)
+    })
+    p_spam -= math.log(2.0)
+    p_notSpam -= math.log(2.0)
+    println("P(spam) = " + p_spam + ", P(not spam) = " + p_notSpam)
+  }
 }
