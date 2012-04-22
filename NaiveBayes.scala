@@ -60,11 +60,16 @@ class NaiveBayes {
   }
 
   // train
-  // compute probabiity of each spam word, and prob of each non-spam word
-  def train(spamPath: String, nonSpamPath: String) : (Map[String, Double], Map[String, Double]) = {
-    val spamFreqs = buildDictionary(spamPath).toMap
-    val nonSpamFreqs = buildDictionary(spamPath).toMap
-    (spamFreqs, nonSpamFreqs)
+  // compute frequency of each spam word, and freq of each non-spam word
+  def train(spamPath: String, nonSpamPath: String) : (Map[String, Float], Map[String, Float]) = {
+    val spamFreqs = buildDictionary(spamPath).map(w => (w._2, w._3))
+    val N_spam = spamFreqs.size
+    val nonSpamFreqs = buildDictionary(spamPath).map(w => (w._2, w._3))
+    val N_notSpam = nonSpamFreqs.size
+    (
+      spamFreqs.map(w => (w._1, w._2.toFloat/N_spam.toFloat)).toMap, 
+      nonSpamFreqs.map(w => (w._1, w._2.toFloat/N_notSpam.toFloat)).toMap
+    )
   }
 
   // model
