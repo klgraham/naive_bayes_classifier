@@ -42,8 +42,8 @@ class NaiveBayes {
   }
 
   /**
-  *
-  *
+  * Word frequencies for each document
+  * @return (docId, word, frequency)
   */
   def buildFeatures(pathToFiles: String) : Seq[(Int, String, Int)] = {
     val files = new File(pathToFiles).listFiles.iterator
@@ -58,17 +58,20 @@ class NaiveBayes {
   
     msgs
   }
-
-  // train
-  // compute frequency of each spam word, and freq of each non-spam word
-  def train(spamPath: String, nonSpamPath: String) : (Map[String, Float], Map[String, Float]) = {
-    val spamFreqs = buildDictionary(spamPath).map(w => (w._2, w._3))
+  
+  // TODO: fix this. compute log of probabilities
+  /**
+  * Trains the model, i.e. it computes P(word|spam) and P(word|non-spam)
+  * @return (P(word|spam), P(word|non-spam))
+  */
+  def train(spamTrainingPath: String, nonSpamTrainingPath: String, dictSize: Int) : (Map[String, Float], Map[String, Float]) = {
+    val spamFreqs = buildDictionary(spamTrainingPath).map(w => (w._2, w._3))
     val N_spam = spamFreqs.size
-    val nonSpamFreqs = buildDictionary(spamPath).map(w => (w._2, w._3))
+    val nonSpamFreqs = buildDictionary(nonSpamTrainingPath).map(w => (w._2, w._3))
     val N_notSpam = nonSpamFreqs.size
     (
-      spamFreqs.map(w => (w._1, w._2.toFloat/N_spam.toFloat)).toMap, 
-      nonSpamFreqs.map(w => (w._1, w._2.toFloat/N_notSpam.toFloat)).toMap
+      spamFreqs.map(w => (w._1, w._2.toFloat/(N_spam + dictSize).toFloat)).toMap, 
+      nonSpamFreqs.map(w => (w._1, w._2.toFloat/(N_notSpam + dictSize).toFloat)).toMap
     )
   }
 
