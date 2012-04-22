@@ -13,46 +13,59 @@ class NaiveBayes {
     sentence.replaceAll("[.,]", "").split(" ").map {s => s.toLowerCase})
   }
 
-  def buildDictionary(pathToFiles: String) : Seq[(String, Int)] = {
-    val dictionary = new HashSet[String]
+  /**
+  * Counts word frequencies over entire dataset. More frequent terms
+  * come first.
+  * @return (word index, word, word frequency)
+  */
+  def buildDictionary(pathToFiles: String) : Seq[(Int, String, Int)] = {
+    val dictionary = new HashMap[String, Int]
     val files = new File(pathToFiles).listFiles.iterator
     
     // read each file
     files.foreach {f => {
       val file = new Scanner(f)
-      while (file.hasNext) 
-        dictionary += file.next.toString
+      while (file.hasNext){
+        val word = file.next.toString
+        val count = dictionary.getOrElseUpdate(word, 1)
+        if (count > 1) dictionary.put(word, count + 1)
+      }
     }}
 
     var wordIndex: Int = -1
-    dictionary.map {s => {
+    dictionary.toSeq.sortWith(_._2 > _._2)
+    .map(w => {
       wordIndex += 1
-      (s, wordIndex)}
-    }.toMap.toSeq.sortWith(_._2 > _._2)
+      (wordIndex, w._1, w._2)
+    })
+    .toSeq
   }
 
-  def buildFeatures(pathToFiles: String, dictionary: Map[String, Int]) : Seq[(Int, Int, Int)] = {
+  /**
+  *
+  *
+  */
+  def buildFeatures(pathToFiles: String) : Seq[(Int, String, Int)] = {
     val files = new File(pathToFiles).listFiles.iterator
-    val msgs = new ArrayBuffer[(Int, Int, Int)]
+    val msgs = new ArrayBuffer[(Int, String, Int)]
 
-    // loop over each msg
     var msgId = 0
     files.foreach {f => {
-      val msg = new Scanner(f)
-      val features = new HashMap[String, Int]
-      while (msg.hasNext){
-        val word = msg.next
-        // build hashmap of [wordId, wordCount]
-        val count = features.getOrElseUpdate(word, 1)
-        if (count > 1) features.put(word, count + 1)
-      }
-      msgs appendAll features.map(f => (msgId, dictionary.get(f._1).get, f._2)).toSeq
+      val msgDict = buildDictionary(f.toString)
+      msgs appendAll msgDict.map(f => (msgId, f._2, f._3)).toSeq
+      msgId += 1
     }}
   
     msgs
   }
 
   // train
+  // compute probabiity of each spam word, and prob of each non-spam word
+  def train(spamPath: String, nonSpamPath: String) : (Map[String, Double], Map[String, Double]) = {
+    val spamFreqs = buildDictionary(spamPath).toMap
+    val nonSpamFreqs = buildDictionary(spamPath).toMap
+    (spamFreqs, nonSpamFreqs)
+  }
 
   // model
 
