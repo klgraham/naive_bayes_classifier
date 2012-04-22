@@ -41,6 +41,26 @@ class NaiveBayes {
     .toSeq
   }
 
+  def buildFileDict(pathToFile: String) : Seq[(Int, String, Int)] = {
+    val dictionary = new HashMap[String, Int]
+    val msg = new File(pathToFile)
+
+    val file = new Scanner(msg)
+    while (file.hasNext){
+      val word = file.next.toString
+      val count = dictionary.getOrElseUpdate(word, 1)
+      if (count > 1) dictionary.put(word, count + 1)
+    }
+
+    var wordIndex: Int = -1
+    dictionary.toSeq.sortWith(_._2 > _._2)
+    .map(w => {
+      wordIndex += 1
+      (wordIndex, w._1, w._2)
+    })
+    .toSeq
+  }
+
   /**
   * Word frequencies for each document
   * @return (docId, word, frequency)
@@ -75,6 +95,7 @@ class NaiveBayes {
     )
   }
 
+  // TODO fix bug here
   /**
   * Computes the probability that a given message 
   */
@@ -84,9 +105,8 @@ class NaiveBayes {
     val files = new File(testSetPath).listFiles.iterator 
 
     files.foreach(f => {
-      val msg = buildDictionary(f.toString)
-      msg.map(w => w._2)
-      .toSeq.foreach(w => {
+      val msg = buildFileDict(f.toString)
+      msg.map(w => w._2).toSeq.foreach(w => {
         p_spam += p_word_spam.getOrElse(w, 0.0)
         p_notSpam += p_word_notSpam.getOrElse(w, 0.0)
       })
@@ -96,24 +116,5 @@ class NaiveBayes {
       val prediction = if (p_spam > p_notSpam) "SPAM" else "not spam"
       println("P(spam) = " + p_spam + ", P(not spam) = " + p_notSpam + ", " + prediction)
     })
-  }
-}
-
-object NaiveBayes {
-  def main(args: Array[String]) = {
-    val spam_train = "/Users/ken/Dropbox/projects/naive_bayes_classifier/spamData/spam-train"
-    val spam_test = "/Users/ken/Dropbox/projects/naive_bayes_classifier/spamData/spam-test"
-    val nonspam_train = "/Users/ken/Dropbox/projects/naive_bayes_classifier/spamData/nonspam-train"
-    val nonspam_test = "/Users/ken/Dropbox/projects/naive_bayes_classifier/spamData/nonspam-test"
-    val allData = "/Users/ken/Dropbox/projects/naive_bayes_classifier/spamData/all"
-    val nb = new NaiveBayes
-    
-    val wordList = nb.buildDictionary(allData)
-    val training = nb.train(spam_train, nonspam_train, wordList.size)
-    
-    println("*** Spam Test Set ***\n")
-    nb.predict(spam_test, training._1, training._2)
-    println("\n*** Non Spam Test Set ***\n")
-    nb.predict(nonspam_test, training._1, training._2)
   }
 }
