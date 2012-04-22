@@ -81,15 +81,39 @@ class NaiveBayes {
   def predict(testSetPath: String, p_word_spam: Map[String, Double], p_word_notSpam: Map[String, Double]) = {
     var p_spam: Double = 0
     var p_notSpam: Double = 0
-    val testWords = buildDictionary(testSetPath)
+    val files = new File(testSetPath).listFiles.iterator 
 
-    testWords.map(w => w._2)
-    .toSeq.foreach(w => {
-      p_spam += p_word_spam.getOrElse(w, 0.0)
-      p_notSpam += p_word_notSpam.getOrElse(w, 0.0)
+    files.foreach(f => {
+      val msg = buildDictionary(f.toString)
+      msg.map(w => w._2)
+      .toSeq.foreach(w => {
+        p_spam += p_word_spam.getOrElse(w, 0.0)
+        p_notSpam += p_word_notSpam.getOrElse(w, 0.0)
+      })
+      
+      p_spam -= math.log(2.0)
+      p_notSpam -= math.log(2.0)
+      val prediction = if (p_spam > p_notSpam) "SPAM" else "not spam"
+      println("P(spam) = " + p_spam + ", P(not spam) = " + p_notSpam + ", " + prediction)
     })
-    p_spam -= math.log(2.0)
-    p_notSpam -= math.log(2.0)
-    println("P(spam) = " + p_spam + ", P(not spam) = " + p_notSpam)
+  }
+}
+
+object NaiveBayes {
+  def main(args: Array[String]) = {
+    val spam_train = "/Users/ken/Dropbox/projects/naive_bayes_classifier/spamData/spam-train"
+    val spam_test = "/Users/ken/Dropbox/projects/naive_bayes_classifier/spamData/spam-test"
+    val nonspam_train = "/Users/ken/Dropbox/projects/naive_bayes_classifier/spamData/nonspam-train"
+    val nonspam_test = "/Users/ken/Dropbox/projects/naive_bayes_classifier/spamData/nonspam-test"
+    val allData = "/Users/ken/Dropbox/projects/naive_bayes_classifier/spamData/all"
+    val nb = new NaiveBayes
+    
+    val wordList = nb.buildDictionary(allData)
+    val training = nb.train(spam_train, nonspam_train, wordList.size)
+    
+    println("*** Spam Test Set ***\n")
+    nb.predict(spam_test, training._1, training._2)
+    println("\n*** Non Spam Test Set ***\n")
+    nb.predict(nonspam_test, training._1, training._2)
   }
 }
