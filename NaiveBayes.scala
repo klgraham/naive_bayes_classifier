@@ -61,17 +61,17 @@ class NaiveBayes {
   
   /**
   * Trains the model, i.e. it computes P(word|spam) and P(word|non-spam)
-  * @return (P(word|spam), P(word|non-spam))
+  * @return (log P(word|spam), log P(word|non-spam))
   */
-  def train(spamTrainingPath: String, nonSpamTrainingPath: String, dictSize: Int) : (Map[String, Float], Map[String, Float]) = {
+  def train(spamTrainingPath: String, nonSpamTrainingPath: String, dictSize: Int) : (Map[String, Double], Map[String, Double]) = {
     // train probabilities for spam
     val spamFreqs = buildDictionary(spamTrainingPath).map(w => (w._2, w._3))
     val N_spam = spamFreqs.size
     val nonSpamFreqs = buildDictionary(nonSpamTrainingPath).map(w => (w._2, w._3))
     val N_notSpam = nonSpamFreqs.size
     (
-      spamFreqs.map(w => (w._1, (w._2 + dictSize*0.5f)/(N_spam + dictSize).toFloat)).toMap, 
-      nonSpamFreqs.map(w => (w._1, (w._2 + dictSize*0.5f)/(N_notSpam + dictSize).toFloat)).toMap
+      spamFreqs.map(w => (w._1, math.log((w._2 + dictSize*0.5)/(N_spam + dictSize).toDouble))).toMap, 
+      nonSpamFreqs.map(w => (w._1, math.log((w._2 + dictSize*0.5)/(N_notSpam + dictSize).toDouble))).toMap
     )
   }
 
