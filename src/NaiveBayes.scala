@@ -93,7 +93,7 @@ class NaiveBayes(alpha: Double = 1.0) {
   * here, P(x) = log P(x), P(x|y) = log P(x|y)
   */
   def predict(classification: String, testSetPath: String, p_word_spam: Map[String, Double], 
-    p_word_notSpam: Map[String, Double], pSpam: Double, pNotSpam: Double): (Int, Int) = {
+    p_word_notSpam: Map[String, Double], pSpam: Double, pNotSpam: Double): (Double, Double) = {
     
     val files = new File(testSetPath).listFiles.iterator 
     var hits: Int = 0
@@ -116,9 +116,9 @@ class NaiveBayes(alpha: Double = 1.0) {
       if (prediction equals classification) hits += 1 else misses += 1      
     })
 
-    println(classification + ": hits: " + hits + ", misses: " + misses 
-      + " => % Correct: " + hits.toDouble / (hits + misses).toDouble)
-    (hits, misses)
+    //println(classification + ": hits: " + hits + ", misses: " + misses 
+    //  + " => % Correct: " + hits.toDouble / (hits + misses).toDouble)
+    (hits.toDouble, misses.toDouble)
   }
 }
 
@@ -131,14 +131,22 @@ object NaiveBayes {
     val nonspam_test = pathToData + "/nonspam-test"
     val allTrainingData = pathToData + "/training-set"
 
-    val nb = new NaiveBayes
-    val wordList = nb.buildVocabulary(allTrainingData)
-    val training = nb.train(spam_train, nonspam_train, wordList.size)
+    println("| Alpha | Total Correct | Spam Correct | Non-Spam Correct |")
+    println("| ------- | ------- | ------- | ------- |")
+    var alpha:Double = 1.0
+    for(x <- 1 to 40){
+      alpha *= 0.5
+      val nb = new NaiveBayes(alpha)
+      val wordList = nb.buildVocabulary(allTrainingData)
+      val training = nb.train(spam_train, nonspam_train, wordList.size)
 
-    val spam = nb.predict("spam", spam_test, training._1, training._2, training._3, training._4)
-    val nonSpam = nb.predict("not spam", nonspam_test, training._1, training._2, training._3, training._4)
-    val N = spam._1 + spam._2 + nonSpam._1 + nonSpam._2
-    println("Cumulative % correct\n" + (spam._1 + nonSpam._1).toDouble / N.toDouble)
+      val spam = nb.predict("spam", spam_test, training._1, training._2, training._3, training._4)
+      val nonSpam = nb.predict("not spam", nonspam_test, training._1, training._2, training._3, training._4)
+      val N = spam._1 + spam._2 + nonSpam._1 + nonSpam._2
+      val spamCorrect = spam._1 / (spam._1 + spam._2)
+      val nonSpamCorrect = nonSpam._1 / (nonSpam._1 + nonSpam._2)
+      println("| " + alpha + " | " + ((spam._1 + nonSpam._1) / N) + " | " + spamCorrect + " | " + nonSpamCorrect + " |")
+    }
   }
 }
 
