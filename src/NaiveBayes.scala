@@ -13,8 +13,7 @@ class NaiveBayes(alpha: Double = 1.0) {
   }*/
 
   /**
-  * Counts word frequencies over files in the specifed input. More frequent terms
-  * come first.
+  * Counts word frequencies over files in the specifed input. 
   * @return (word, word frequency)
   */
   def buildVocabulary(pathToFiles: String) : Map[String, Int] = {
@@ -34,8 +33,7 @@ class NaiveBayes(alpha: Double = 1.0) {
   }
 
   /**
-  * Counts word frequencies over single data file. More frequent terms
-  * come first.
+  * Counts word frequencies over single data file.
   * @return (word, word frequency)
   */
   def buildFileDict(pathToFile: String) : Map[String, Int]= {
